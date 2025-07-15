@@ -1,6 +1,9 @@
+<<<<<<< HEAD
 // ignore_for_file: require_trailing_commas
 
 import 'dart:async';
+=======
+>>>>>>> upstream/master
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
@@ -20,7 +23,8 @@ final info = jsonEncode(
     isConnectable: true,
   ),
 );
-const channel = MethodChannel('polar');
+const methodChannel = MethodChannel('polar/methods');
+const eventChannel = EventChannel('polar/events');
 const searchChannel = EventChannel('polar/search');
 
 void main() {
@@ -28,18 +32,24 @@ void main() {
 
   setUpAll(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, handleMethodCall);
+        .setMockMethodCallHandler(methodChannel, handleMethodCall);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockStreamHandler(eventChannel, EventHandler());
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockStreamHandler(searchChannel, SearchHandler());
   });
 
   testSearch(identifier);
   testConnection(identifier);
-  testBasicData(identifier);
+  testBasicData(
+    identifier,
+    expectedChargeState: PolarChargeState.dischargingActive,
+  );
   testBleSdkFeatures(identifier, features: PolarSdkFeature.values.toSet());
   testStreaming(identifier, features: PolarDataType.values.toSet());
   testRecording(identifier, wait: false);
   testSdkMode(identifier);
+<<<<<<< HEAD
   testMisc(identifier, isVerity: true);
   testAvailableOfflineRecordingDataTypes(identifier);
   testOfflineRecording(identifier);
@@ -57,6 +67,9 @@ Future<void> invoke(String method, [dynamic arguments]) {
 
 void executeLater<T>(FutureOr<T> Function() computation) {
   Future.delayed(Duration.zero, computation);
+=======
+  testMisc(identifier, supportsLedConfig: true);
+>>>>>>> upstream/master
 }
 
 final exercises = <PolarExerciseEntry>[];
@@ -70,18 +83,8 @@ Future<dynamic> handleMethodCall(MethodCall methodCall) async {
   
   switch (methodCall.method) {
     case 'connectToDevice':
-      executeLater(() async {
-        await invoke('deviceConnecting', info);
-        await invoke('deviceConnected', info);
-        await invoke('disInformationReceived', [identifier, '', '']);
-        await invoke('batteryLevelReceived', [identifier, 100]);
-        for (final feature in PolarSdkFeature.values) {
-          await invoke('sdkFeatureReady', [identifier, feature.toJson()]);
-        }
-      });
       return null;
     case 'disconnectFromDevice':
-      executeLater(() => invoke('deviceDisconnected', [info, false]));
       return null;
     case 'getAvailableOnlineStreamDataTypes':
       return jsonEncode(PolarDataType.values.map((e) => e.toJson()).toList());
@@ -241,6 +244,43 @@ Future<dynamic> handleMethodCall(MethodCall methodCall) async {
   }
 }
 
+class EventHandler extends MockStreamHandler {
+  @override
+  void onListen(dynamic arguments, MockStreamHandlerEventSink events) {
+    events.success({'event': 'deviceConnecting', 'data': info});
+    events.success({'event': 'deviceConnected', 'data': info});
+    events.success({
+      'event': 'disInformationReceived',
+      'data': [identifier, '', ''],
+    });
+    events.success({
+      'event': 'batteryLevelReceived',
+      'data': [identifier, 100],
+    });
+    events.success({
+      'event': 'batteryChargingStatusReceived',
+      'data': [
+        identifier,
+        PolarChargeState.dischargingActive.toJson(),
+      ],
+    });
+    for (final feature in PolarSdkFeature.values) {
+      events.success({
+        'event': 'sdkFeatureReady',
+        'data': [identifier, feature.toJson()],
+      });
+    }
+
+    events.success({
+      'event': 'deviceDisconnected',
+      'data': [info, false],
+    });
+  }
+
+  @override
+  void onCancel(dynamic arguments) {}
+}
+
 class SearchHandler extends MockStreamHandler {
   @override
   void onListen(dynamic arguments, MockStreamHandlerEventSink events) {
@@ -281,7 +321,11 @@ class StreamingHandler extends MockStreamHandler {
         data = PolarPpiData(
           samples: [
             PolarPpiSample(
+<<<<<<< HEAD
               timeStamp: DateTime.now(),
+=======
+              timeStamp: 0,
+>>>>>>> upstream/master
               ppi: 0,
               errorEstimate: 0,
               hr: 0,
@@ -313,8 +357,13 @@ class StreamingHandler extends MockStreamHandler {
           samples: [
             PolarHrSample(
               hr: 0,
+<<<<<<< HEAD
               correctedHr: 0,
               ppgQuality: 0,
+=======
+              ppgQuality: 0,
+              correctedHr: 0,
+>>>>>>> upstream/master
               rrsMs: [],
               rrAvailable: false,
               contactStatus: false,
@@ -337,6 +386,36 @@ class StreamingHandler extends MockStreamHandler {
             PolarPressureSample(
               timeStamp: DateTime.now(),
               pressure: 0,
+            ),
+          ],
+        );
+      case PolarDataType.skinTemperature:
+        data = PolarTemperatureData(
+          samples: [
+            PolarTemperatureSample(
+              timeStamp: DateTime.now(),
+              temperature: 0,
+            ),
+          ],
+        );
+      case PolarDataType.location:
+        data = PolarLocationData(
+          samples: [
+            PolarLocationDataSample(
+              timeStamp: DateTime.now(),
+              latitude: 0,
+              longitude: 0,
+              time: '',
+              speed: 0,
+              cumulativeDistance: 0,
+              usedAccelerationSpeed: 0,
+              coordinateSpeed: 0,
+              accelerationSpeedFactor: 0,
+              course: 0,
+              gpsChipSpeed: 0,
+              fix: true,
+              speedFlag: 0,
+              fusionState: 0,
             ),
           ],
         );

@@ -14,6 +14,7 @@ import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import com.google.gson.JsonSyntaxException
 import com.polar.androidcommunications.api.ble.model.DisInfo
+import com.polar.androidcommunications.api.ble.model.gatt.client.ChargeState
 import com.polar.sdk.api.PolarBleApi
 import com.polar.sdk.api.PolarBleApi.PolarBleSdkFeature
 import com.polar.sdk.api.PolarBleApi.PolarDeviceDataType
@@ -99,12 +100,16 @@ private object PolarErrorCode {
 class PolarPlugin :
     FlutterPlugin,
     MethodCallHandler,
+    EventChannel.StreamHandler,
     ActivityAware {
     // Binary messenger for dynamic EventChannel registration
     private lateinit var messenger: BinaryMessenger
 
     // Method channel
-    private lateinit var channel: MethodChannel
+    private lateinit var methodChannel: MethodChannel
+
+    // Event channel
+    private lateinit var eventChannel: EventChannel
 
     // Search channel
     private lateinit var searchChannel: EventChannel
@@ -156,8 +161,11 @@ class PolarPlugin :
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         messenger = flutterPluginBinding.binaryMessenger
 
-        channel = MethodChannel(flutterPluginBinding.binaryMessenger, "polar")
-        channel.setMethodCallHandler(this)
+        methodChannel = MethodChannel(flutterPluginBinding.binaryMessenger, "polar/methods")
+        methodChannel.setMethodCallHandler(this)
+
+        eventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "polar/events")
+        eventChannel.setStreamHandler(this)
 
         searchChannel = EventChannel(flutterPluginBinding.binaryMessenger, "polar/search")
         searchChannel.setStreamHandler(searchHandler)
@@ -169,7 +177,8 @@ class PolarPlugin :
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        channel.setMethodCallHandler(null)
+        methodChannel.setMethodCallHandler(null)
+        eventChannel.setStreamHandler(null)
         searchChannel.setStreamHandler(null)
         streamingChannels.values.forEach { it.dispose() }
         shutDown()
@@ -179,7 +188,6 @@ class PolarPlugin :
         if (wrapperInternal == null) {
             wrapperInternal = PolarWrapper(context)
         }
-        wrapper.addCallback(polarCallback)
     }
 
     override fun onMethodCall(
@@ -200,6 +208,7 @@ class PolarPlugin :
             }
 
             "getAvailableOnlineStreamDataTypes" -> getAvailableOnlineStreamDataTypes(call, result)
+            "getAvailableHrServiceDataTypes" -> getAvailableHrServiceDataTypes(call, result)
             "requestStreamSettings" -> requestStreamSettings(call, result)
             "createStreamingChannel" -> createStreamingChannel(call, result)
             "startRecording" -> startRecording(call, result)
@@ -239,6 +248,18 @@ class PolarPlugin :
             "deleteStoredDeviceData" -> deleteStoredDeviceData(call, result)
             else -> result.notImplemented()
         }
+    }
+
+    override fun onListen(
+        arguments: Any?,
+        events: EventSink,
+    ) {
+        initApi()
+        wrapper.addSink(arguments as Int, events)
+    }
+
+    override fun onCancel(arguments: Any?) {
+        wrapper.removeSink(arguments as Int)
     }
 
     private val searchHandler =
@@ -306,7 +327,6 @@ class PolarPlugin :
 
     private fun shutDown() {
         if (wrapperInternal == null) return
-        wrapper.removeCallback(polarCallback)
         wrapper.shutDown()
     }
 
@@ -318,6 +338,24 @@ class PolarPlugin :
 
         wrapper.api
             .getAvailableOnlineStreamDataTypes(identifier)
+            .subscribe({
+                runOnUiThread { result.success(gson.toJson(it)) }
+            }, {
+                runOnUiThread {
+                    result.error(it.toString(), it.message, null)
+                }
+            })
+            .discard()
+    }
+
+    private fun getAvailableHrServiceDataTypes(
+        call: MethodCall,
+        result: Result,
+    ) {
+        val identifier = call.arguments as String
+
+        wrapper.api
+            .getAvailableHRServiceDataTypes(identifier)
             .subscribe({
                 runOnUiThread { result.success(gson.toJson(it)) }
             }, {
@@ -1397,7 +1435,7 @@ class PolarWrapper @OptIn(ExperimentalStdlibApi::class) constructor(
             context,
             PolarBleSdkFeature.values().toSet(),
         ),
-    private val callbacks: MutableSet<(String, Any?) -> Unit> = mutableSetOf(),
+    private val sinks: MutableMap<Int, EventSink> = mutableMapOf(),
 ) : PolarBleApiCallbackProvider {
     
     companion object {
@@ -1424,25 +1462,27 @@ class PolarWrapper @OptIn(ExperimentalStdlibApi::class) constructor(
         api.setApiCallback(this)
     }
 
-    fun addCallback(callback: (String, Any?) -> Unit) {
-        if (callbacks.contains(callback)) return
-        callbacks.add(callback)
-    }
-
-    fun removeCallback(callback: (String, Any?) -> Unit) {
-        callbacks.remove(callback)
-    }
-
-    private fun invoke(
-        method: String,
-        arguments: Any?,
+    fun addSink(
+        id: Int,
+        sink: EventSink,
     ) {
-        callbacks.forEach { it(method, arguments) }
+        sinks[id] = sink
+    }
+
+    fun removeSink(id: Int) {
+        sinks.remove(id)
+    }
+
+    private fun success(
+        event: String,
+        data: Any?,
+    ) {
+        runOnUiThread { sinks.values.forEach { it.success(mapOf("event" to event, "data" to data)) } }
     }
 
     fun shutDown() {
         // Do not shutdown the api if other engines are still using it
-        if (callbacks.isNotEmpty()) return
+        if (sinks.isNotEmpty()) return
         try {
             api.shutDown()
         } catch (e: Exception) {
@@ -1451,26 +1491,26 @@ class PolarWrapper @OptIn(ExperimentalStdlibApi::class) constructor(
     }
 
     override fun blePowerStateChanged(powered: Boolean) {
-        invoke("blePowerStateChanged", powered)
+        success("blePowerStateChanged", powered)
     }
 
     override fun bleSdkFeatureReady(
         identifier: String,
         feature: PolarBleSdkFeature,
     ) {
-        invoke("sdkFeatureReady", listOf(identifier, feature.name))
+        success("sdkFeatureReady", listOf(identifier, feature.name))
     }
 
     override fun deviceConnected(polarDeviceInfo: PolarDeviceInfo) {
-        invoke("deviceConnected", gson.toJson(polarDeviceInfo))
+        success("deviceConnected", gson.toJson(polarDeviceInfo))
     }
 
     override fun deviceConnecting(polarDeviceInfo: PolarDeviceInfo) {
-        invoke("deviceConnecting", gson.toJson(polarDeviceInfo))
+        success("deviceConnecting", gson.toJson(polarDeviceInfo))
     }
 
     override fun deviceDisconnected(polarDeviceInfo: PolarDeviceInfo) {
-        invoke(
+        success(
             "deviceDisconnected",
             // The second argument is the `pairingError` field on iOS
             // Since Android doesn't implement that, always send false
@@ -1483,21 +1523,21 @@ class PolarWrapper @OptIn(ExperimentalStdlibApi::class) constructor(
         uuid: UUID,
         value: String,
     ) {
-        invoke("disInformationReceived", listOf(identifier, uuid.toString(), value))
+        success("disInformationReceived", listOf(identifier, uuid.toString(), value))
     }
 
     override fun disInformationReceived(
         identifier: String,
         disInfo: DisInfo,
     ) {
-        invoke("disInformationReceived", listOf(identifier, disInfo.key, disInfo.value))
+        success("disInformationReceived", listOf(identifier, disInfo.key, disInfo.value))
     }
 
     override fun batteryLevelReceived(
         identifier: String,
         level: Int,
     ) {
-        invoke("batteryLevelReceived", listOf(identifier, level))
+        success("batteryLevelReceived", listOf(identifier, level))
     }
 
     override fun batteryChargingStatusReceived(
@@ -1510,6 +1550,16 @@ class PolarWrapper @OptIn(ExperimentalStdlibApi::class) constructor(
 
     @Deprecated("", replaceWith = ReplaceWith(""))
     fun hrFeatureReady(identifier: String) {
+        identifier: String,
+        chargingStatus: ChargeState,
+    ) {
+        success("batteryChargingStatusReceived", listOf(identifier, chargingStatus.name))
+    }
+
+    override fun htsNotificationReceived(
+        identifier: String,
+        data: PolarHealthThermometerData,
+    ) {
         // Do nothing
     }
 
@@ -1578,16 +1628,14 @@ class StreamingChannel(
                         identifier,
                         settings,
                     )
-
                 PolarDeviceDataType.TEMPERATURE ->
                     api.startTemperatureStreaming(
                         identifier,
                         settings,
                     )
-
-                PolarDeviceDataType.PRESSURE -> TODO()
-                PolarDeviceDataType.LOCATION -> TODO()
-                PolarDeviceDataType.SKIN_TEMPERATURE -> TODO()
+                PolarDeviceDataType.PRESSURE -> api.startPressureStreaming(identifier, settings)
+                PolarDeviceDataType.SKIN_TEMPERATURE -> api.startSkinTemperatureStreaming(identifier, settings)
+                PolarDeviceDataType.LOCATION -> api.startLocationStreaming(identifier, settings)
             }
 
         subscription =

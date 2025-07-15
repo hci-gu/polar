@@ -87,7 +87,11 @@ class PolarDataCodable<T>: Encodable {
     } else if let data = data as? PolarEcgData {
       codables = data.map(PolarEcgSampleCodable.init)
     } else if let data = data as? PolarAccData {
+<<<<<<< HEAD
         codables = data.map(PolarAccSampleCodable.init)
+=======
+      codables = data.map(PolarAccSampleCodable.init)
+>>>>>>> upstream/master
     } else if let data = data as? PolarPpgData {
       try? container.encode(data.type.rawValue, forKey: .type)
       codables = data.samples.map(PolarPpgSampleCodable.init)
@@ -110,7 +114,12 @@ class PolarDataCodable<T>: Encodable {
 }
 
 typealias PolarHrSample = (
+<<<<<<< HEAD
   hr: UInt8, ppgQuality: UInt8, correctedHr: UInt8, rrsMs: [Int], rrAvailable: Bool, contactStatus: Bool, contactStatusSupported: Bool
+=======
+  hr: UInt8, ppgQuality: UInt8, correctedHr: UInt8, rrsMs: [Int], rrAvailable: Bool,
+  contactStatus: Bool, contactStatusSupported: Bool
+>>>>>>> upstream/master
 )
 
 class PolarHrSampleCodable: Encodable {
@@ -279,6 +288,7 @@ class PolarPpgSampleCodable: Encodable {
 }
 
 typealias PolarPpiSample = (
+<<<<<<< HEAD
   timeStamp: UInt64, hr: Int, ppInMs: UInt16, ppErrorEstimate: UInt16, blockerBit: Int, skinContactStatus: Int,
   skinContactSupported: Int
 )
@@ -301,6 +311,40 @@ struct PolarPpiSampleCodable: Codable {
         skinContactStatus = sample.skinContactStatus
         skinContactSupported = sample.skinContactSupported
     }
+=======
+  timeStamp: UInt64, hr: Int, ppInMs: UInt16, ppErrorEstimate: UInt16, blockerBit: Int,
+  skinContactStatus: Int,
+  skinContactSupported: Int
+)
+
+class PolarPpiSampleCodable: Encodable {
+  let data: PolarPpiSample
+
+  init(_ data: PolarPpiSample) {
+    self.data = data
+  }
+
+  enum CodingKeys: String, CodingKey {
+    case timeStamp
+    case hr
+    case ppInMs
+    case ppErrorEstimate
+    case blockerBit
+    case skinContactStatus
+    case skinContactSupported
+  }
+
+  func encode(to encoder: Encoder) {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try? container.encode(data.timeStamp, forKey: .timeStamp)
+    try? container.encode(data.hr, forKey: .hr)
+    try? container.encode(data.ppInMs, forKey: .ppInMs)
+    try? container.encode(data.ppErrorEstimate, forKey: .ppErrorEstimate)
+    try? container.encode(data.blockerBit, forKey: .blockerBit)
+    try? container.encode(data.skinContactStatus, forKey: .skinContactStatus)
+    try? container.encode(data.skinContactSupported, forKey: .skinContactSupported)
+  }
+>>>>>>> upstream/master
 }
 
 typealias PolarTemperatureSample = (timeStamp: UInt64, temperature: Float)

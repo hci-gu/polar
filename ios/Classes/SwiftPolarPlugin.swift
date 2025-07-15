@@ -36,6 +36,7 @@ private enum PolarErrorCode {
 public class SwiftPolarPlugin:
   NSObject,
   FlutterPlugin,
+  FlutterStreamHandler,
   PolarBleApiObserver,
   PolarBleApiPowerStateObserver,
   PolarBleApiDeviceFeaturesObserver
@@ -44,7 +45,10 @@ public class SwiftPolarPlugin:
   let messenger: FlutterBinaryMessenger
 
   /// Method channel
-  let channel: FlutterMethodChannel
+  let methodChannel: FlutterMethodChannel
+
+  /// Event channel
+  let eventChannel: FlutterEventChannel
 
   /// Search channel
   let searchChannel: FlutterEventChannel
@@ -53,17 +57,23 @@ public class SwiftPolarPlugin:
   var streamingChannels = [String: StreamingChannel]()
 
   var api: PolarBleApi!
+<<<<<<< HEAD
   
   /// Disposable bag for RxSwift subscriptions
   let disposeBag = DisposeBag()
+=======
+  var events: FlutterEventSink?
+>>>>>>> upstream/master
 
   init(
     messenger: FlutterBinaryMessenger,
-    channel: FlutterMethodChannel,
+    methodChannel: FlutterMethodChannel,
+    eventChannel: FlutterEventChannel,
     searchChannel: FlutterEventChannel
   ) {
     self.messenger = messenger
-    self.channel = channel
+    self.methodChannel = methodChannel
+    self.eventChannel = eventChannel
     self.searchChannel = searchChannel
   }
 
@@ -90,6 +100,29 @@ public class SwiftPolarPlugin:
     api.observer = self
     api.powerStateObserver = self
     api.deviceFeaturesObserver = self
+<<<<<<< HEAD
+=======
+    api.deviceInfoObserver = self
+  }
+
+  public static func register(with registrar: FlutterPluginRegistrar) {
+    let methodChannel = FlutterMethodChannel(
+      name: "polar/methods", binaryMessenger: registrar.messenger())
+    let eventChannel = FlutterEventChannel(
+      name: "polar/events", binaryMessenger: registrar.messenger())
+    let searchChannel = FlutterEventChannel(
+      name: "polar/search", binaryMessenger: registrar.messenger())
+
+    let instance = SwiftPolarPlugin(
+      messenger: registrar.messenger(),
+      methodChannel: methodChannel,
+      eventChannel: eventChannel,
+      searchChannel: searchChannel)
+
+    registrar.addMethodCallDelegate(instance, channel: methodChannel)
+    eventChannel.setStreamHandler(instance)
+    searchChannel.setStreamHandler(instance.searchHandler)
+>>>>>>> upstream/master
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -105,6 +138,8 @@ public class SwiftPolarPlugin:
         result(nil)
       case "getAvailableOnlineStreamDataTypes":
         getAvailableOnlineStreamDataTypes(call, result)
+      case "getAvailableHrServiceDataTypes":
+        getAvailableHrServiceDataTypes(call, result)
       case "requestStreamSettings":
         try requestStreamSettings(call, result)
       case "createStreamingChannel":
@@ -179,6 +214,19 @@ public class SwiftPolarPlugin:
     }
   }
 
+  public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink)
+    -> FlutterError?
+  {
+    initApi()
+    self.events = events
+    return nil
+  }
+
+  public func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    events = nil
+    return nil
+  }
+
   var searchSubscription: Disposable?
   lazy var searchHandler = StreamHandler(
     onListen: { _, events in
@@ -248,6 +296,32 @@ public class SwiftPolarPlugin:
         result(
           FlutterError(
             code: "Unable to get available online stream data types",
+            message: $0.localizedDescription, details: nil))
+      })
+  }
+
+  func getAvailableHrServiceDataTypes(
+    _ call: FlutterMethodCall, _ result: @escaping FlutterResult
+  ) {
+    let identifier = call.arguments as! String
+
+    _ = api.getAvailableHRServiceDataTypes(identifier: identifier).subscribe(
+      onSuccess: { data in
+        guard let data = jsonEncode(data.map { PolarDeviceDataType.allCases.firstIndex(of: $0)! })
+        else {
+          result(
+            result(
+              FlutterError(
+                code: "Unable to get available HR service data types", message: nil, details: nil
+              )))
+          return
+        }
+        result(data)
+      },
+      onFailure: {
+        result(
+          FlutterError(
+            code: "Unable to get available HR service data types",
             message: $0.localizedDescription, details: nil))
       })
   }
@@ -341,8 +415,7 @@ public class SwiftPolarPlugin:
       },
       onCompleted: {
         result(exercises)
-      }
-    )
+      })
   }
 
   func fetchExercise(_ call: FlutterMethodCall, _ result: @escaping FlutterResult) {
@@ -490,9 +563,9 @@ public class SwiftPolarPlugin:
       })
   }
 
-  private func invokeMethod(_ methodName: String, arguments: Any? = nil) {
+  private func success(_ event: String, data: Any? = nil) {
     DispatchQueue.main.async {
-      self.channel.invokeMethod(methodName, arguments: arguments)
+      self.events?(["event": event, "data": data])
     }
   }
 
@@ -501,7 +574,7 @@ public class SwiftPolarPlugin:
     else {
       return
     }
-    invokeMethod("deviceConnecting", arguments: data)
+    success("deviceConnecting", data: data)
   }
 
   public func deviceConnected(_ polarDeviceInfo: PolarDeviceInfo) {
@@ -509,7 +582,7 @@ public class SwiftPolarPlugin:
     else {
       return
     }
-    invokeMethod("deviceConnected", arguments: data)
+    success("deviceConnected", data: data)
   }
 
   public func deviceDisconnected(_ polarDeviceInfo: PolarDeviceInfo, pairingError: Bool) {
@@ -517,11 +590,18 @@ public class SwiftPolarPlugin:
     else {
       return
     }
-    invokeMethod("deviceDisconnected", arguments: [data, pairingError])
+    success("deviceDisconnected", data: [data, pairingError])
   }
 
   public func batteryLevelReceived(_ identifier: String, batteryLevel: UInt) {
-    invokeMethod("batteryLevelReceived", arguments: [identifier, batteryLevel])
+    success("batteryLevelReceived", data: [identifier, batteryLevel])
+  }
+
+  public func batteryChargingStatusReceived(
+    _ identifier: String, chargingStatus: BleBasClient.ChargeState
+  ) {
+    success(
+      "batteryChargingStatusReceived", data: [identifier, String(describing: chargingStatus)])
   }
 
   public func batteryChargingStatusReceived(_ identifier: String, chargingStatus: BleBasClient.ChargeState) {
@@ -543,31 +623,28 @@ public class SwiftPolarPlugin:
   }
 
   public func blePowerOn() {
-    invokeMethod("blePowerStateChanged", arguments: true)
+    success("blePowerStateChanged", data: true)
   }
 
   public func blePowerOff() {
-    invokeMethod("blePowerStateChanged", arguments: false)
+    success("blePowerStateChanged", data: false)
   }
 
   public func bleSdkFeatureReady(_ identifier: String, feature: PolarBleSdkFeature) {
-    invokeMethod(
+    success(
       "sdkFeatureReady",
-      arguments: [
-        identifier,
-        PolarBleSdkFeature.allCases.firstIndex(of: feature)!,
-      ])
+      data: [identifier, String(describing: feature)])
   }
 
   public func disInformationReceived(_ identifier: String, uuid: CBUUID, value: String) {
-    invokeMethod(
-      "disInformationReceived", arguments: [identifier, uuid.uuidString, value])
+    success(
+      "disInformationReceived", data: [identifier, uuid.uuidString, value])
   }
 
   public func disInformationReceivedWithKeysAsStrings(
     _ identifier: String, key: String, value: String
   ) {
-    channel.invokeMethod("disInformationReceived", arguments: [identifier, key, value])
+    success("disInformationReceived", data: [identifier, key, value])
   }
 
   public func deviceInfoReceived(_ identifier: String, rssi: Int, name: String, connectable: Bool) {
@@ -1567,7 +1644,11 @@ class StreamingChannel: NSObject, FlutterStreamHandler {
     case .pressure:
       stream = api.startPressureStreaming(identifier, settings: settings!)
     case .skinTemperature:
+<<<<<<< HEAD
         stream = api.startSkinTemperatureStreaming(identifier, settings: settings!)
+=======
+      stream = api.startSkinTemperatureStreaming(identifier, settings: settings!)
+>>>>>>> upstream/master
     }
 
     subscription = stream.anySubscribe(
