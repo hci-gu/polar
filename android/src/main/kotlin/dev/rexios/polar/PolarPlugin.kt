@@ -14,7 +14,6 @@ import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import com.google.gson.JsonSyntaxException
 import com.polar.androidcommunications.api.ble.model.DisInfo
-import com.polar.androidcommunications.api.ble.model.gatt.client.ChargeState
 import com.polar.sdk.api.PolarBleApi
 import com.polar.sdk.api.PolarBleApi.PolarBleSdkFeature
 import com.polar.sdk.api.PolarBleApi.PolarDeviceDataType
@@ -31,7 +30,7 @@ import com.polar.sdk.api.model.PolarHrData
 import com.polar.sdk.api.model.PolarSensorSetting
 import com.polar.sdk.api.model.PolarOfflineRecordingEntry
 import com.polar.sdk.api.model.sleep.PolarSleepData
-import com.polar.androidcommunications.api.ble.model.gatt.client.ChargeState
+import com.polar.sdk.api.model.ChargeState
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -131,7 +130,7 @@ class PolarPlugin :
         arguments: Any?,
         callback: Result? = null,
     ) {
-        runOnUiThread { channel.invokeMethod(method, arguments, callback) }
+        runOnUiThread { methodChannel.invokeMethod(method, arguments, callback) }
     }
 
     private val polarCallback = { method: String, arguments: Any? ->
@@ -1544,16 +1543,14 @@ class PolarWrapper @OptIn(ExperimentalStdlibApi::class) constructor(
         identifier: String, 
         chargingStatus: ChargeState
     ) {
-        // TODO: Implement this if needed
-        // For now, we're just providing a stub implementation
+        success("batteryChargingStatusReceived", listOf(identifier, chargingStatus.name))
     }
 
-    @Deprecated("", replaceWith = ReplaceWith(""))
-    fun hrFeatureReady(identifier: String) {
+    override fun hrNotificationReceived(
         identifier: String,
-        chargingStatus: ChargeState,
+        data: PolarHrData.PolarHrSample,
     ) {
-        success("batteryChargingStatusReceived", listOf(identifier, chargingStatus.name))
+        // Do nothing
     }
 
     override fun htsNotificationReceived(
@@ -1564,15 +1561,8 @@ class PolarWrapper @OptIn(ExperimentalStdlibApi::class) constructor(
     }
 
     @Deprecated("", replaceWith = ReplaceWith(""))
-    override fun hrNotificationReceived(
-        identifier: String,
-        data: PolarHrData.PolarHrSample,
-    ) {
+    override fun hrFeatureReady(identifier: String) {
         // Do nothing
-    }
-
-    override fun htsNotificationReceived(identifier: String, data: PolarHealthThermometerData) {
-        TODO("Not yet implemented")
     }
 
     @Deprecated("", replaceWith = ReplaceWith(""))
