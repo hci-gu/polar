@@ -57,13 +57,10 @@ public class SwiftPolarPlugin:
   var streamingChannels = [String: StreamingChannel]()
 
   var api: PolarBleApi!
-<<<<<<< HEAD
   
   /// Disposable bag for RxSwift subscriptions
   let disposeBag = DisposeBag()
-=======
   var events: FlutterEventSink?
->>>>>>> upstream/master
 
   init(
     messenger: FlutterBinaryMessenger,
@@ -100,8 +97,6 @@ public class SwiftPolarPlugin:
     api.observer = self
     api.powerStateObserver = self
     api.deviceFeaturesObserver = self
-<<<<<<< HEAD
-=======
     api.deviceInfoObserver = self
   }
 
@@ -122,7 +117,6 @@ public class SwiftPolarPlugin:
     registrar.addMethodCallDelegate(instance, channel: methodChannel)
     eventChannel.setStreamHandler(instance)
     searchChannel.setStreamHandler(instance.searchHandler)
->>>>>>> upstream/master
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -1644,11 +1638,7 @@ class StreamingChannel: NSObject, FlutterStreamHandler {
     case .pressure:
       stream = api.startPressureStreaming(identifier, settings: settings!)
     case .skinTemperature:
-<<<<<<< HEAD
-        stream = api.startSkinTemperatureStreaming(identifier, settings: settings!)
-=======
       stream = api.startSkinTemperatureStreaming(identifier, settings: settings!)
->>>>>>> upstream/master
     }
 
     subscription = stream.anySubscribe(

@@ -27,13 +27,8 @@ Map<String, dynamic> _$PolarStreamingDataToJson<T>(
 PolarHrSample _$PolarHrSampleFromJson(Map<String, dynamic> json) =>
     PolarHrSample(
       hr: (json['hr'] as num).toInt(),
-<<<<<<< HEAD
       correctedHr: (json['correctedHr'] as num).toInt(),
       ppgQuality: (json['ppgQuality'] as num).toInt(),
-=======
-      ppgQuality: (json['ppgQuality'] as num).toInt(),
-      correctedHr: (json['correctedHr'] as num).toInt(),
->>>>>>> upstream/master
       rrsMs: (json['rrsMs'] as List<dynamic>)
           .map((e) => (e as num).toInt())
           .toList(),
@@ -45,13 +40,8 @@ PolarHrSample _$PolarHrSampleFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$PolarHrSampleToJson(PolarHrSample instance) =>
     <String, dynamic>{
       'hr': instance.hr,
-<<<<<<< HEAD
       'correctedHr': instance.correctedHr,
       'ppgQuality': instance.ppgQuality,
-=======
-      'ppgQuality': instance.ppgQuality,
-      'correctedHr': instance.correctedHr,
->>>>>>> upstream/master
       'rrsMs': instance.rrsMs,
       'rrAvailable': instance.rrAvailable,
       'contactStatus': instance.contactStatus,
@@ -159,12 +149,8 @@ Map<String, dynamic> _$PolarPpgDataToJson(PolarPpgData instance) =>
 
 PolarPpiSample _$PolarPpiSampleFromJson(Map<String, dynamic> json) =>
     PolarPpiSample(
-<<<<<<< HEAD
       timeStamp: const PolarSampleTimestampConverter()
           .fromJson((json['timeStamp'] as num).toInt()),
-=======
-      timeStamp: (json['timeStamp'] as num).toInt(),
->>>>>>> upstream/master
       ppi: (_readPpi(json, 'ppi') as num).toInt(),
       errorEstimate: (_readErrorEstimate(json, 'errorEstimate') as num).toInt(),
       hr: (json['hr'] as num).toInt(),

@@ -84,21 +84,12 @@ class PolarHrSample {
   /// hr in BPM
   final int hr;
 
-<<<<<<< HEAD
   /// corrected hr in BPM
   final int correctedHr;
 
   /// ppg quality
   final int ppgQuality;
 
-=======
-  /// ppgQuality
-  final int ppgQuality;
-
-  /// corrected HR in BPM
-  final int correctedHr;
-
->>>>>>> upstream/master
   /// rrs RR interval in ms.
   final List<int> rrsMs;
 
@@ -114,13 +105,8 @@ class PolarHrSample {
   /// Constructor
   PolarHrSample({
     required this.hr,
-<<<<<<< HEAD
     required this.correctedHr,
     required this.ppgQuality,
-=======
-    required this.ppgQuality,
-    required this.correctedHr,
->>>>>>> upstream/master
     required this.rrsMs,
     required this.rrAvailable,
     required this.contactStatus,
@@ -295,30 +281,20 @@ class PolarPpgData extends PolarStreamingData<PolarPpgSample> {
 /// and the quality of the measurements.
 @JsonSerializable()
 class PolarPpiSample {
-<<<<<<< HEAD
   /// Moment sample is taken in nanoseconds. The epoch of timestamp is 1.1.2000
   @PolarSampleTimestampConverter()
   final DateTime timeStamp;
 
   /// Pulse to Pulse interval in milliseconds.
-  /// 
+  ///
   /// The value indicates the quality of PP-intervals:
   /// - Values with error estimate below 10ms are likely very accurate
   /// - Error estimates over 30ms may indicate movement artifacts or loose sensor contact
-=======
-  /// timestamp
-  final int timeStamp;
-
-  /// ppInMs Pulse to Pulse interval in milliseconds.
-  /// The value indicates the quality of PP-intervals.
-  /// When error estimate is below 10ms the PP-intervals are probably very accurate.
-  /// Error estimate values over 30ms may be caused by movement artefact or too loose sensor-skin contact.
->>>>>>> upstream/master
   @JsonKey(readValue: _readPpi)
   final int ppi;
 
   /// Estimate of the expected absolute error in PP-interval in milliseconds.
-  /// 
+  ///
   /// Lower values indicate more accurate measurements:
   /// - < 10ms: Very accurate
   /// - > 30ms: May indicate measurement issues
@@ -326,27 +302,27 @@ class PolarPpiSample {
   final int errorEstimate;
 
   /// Heart rate in beats per minute (BPM).
-  /// 
+  ///
   /// This value is calculated from the PPI measurements and represents
   /// the current heart rate at the time of the sample.
   final int hr;
 
   /// Indicates if the PP measurement was invalid due to acceleration or other reasons.
-  /// 
+  ///
   /// - true: measurement was invalid
   /// - false: measurement was valid
   @PlatformBooleanConverter()
   final bool blockerBit;
 
   /// Indicates if the device has proper skin contact.
-  /// 
+  ///
   /// - true: good skin contact
   /// - false: poor or no skin contact
   @PlatformBooleanConverter()
   final bool skinContactStatus;
 
   /// Indicates if the device supports the Sensor Contact feature.
-  /// 
+  ///
   /// - true: feature is supported
   /// - false: feature is not supported
   @PlatformBooleanConverter()
@@ -366,26 +342,31 @@ class PolarPpiSample {
   /// From json
   factory PolarPpiSample.fromJson(Map<String, dynamic> json) {
     return PolarPpiSample(
-      timeStamp: const PolarSampleTimestampConverter().fromJson(json['timeStamp']),
+      timeStamp:
+          const PolarSampleTimestampConverter().fromJson(json['timeStamp']),
       ppi: _readPpi(json, 'ppi') as int,
       errorEstimate: _readErrorEstimate(json, 'errorEstimate') as int,
       hr: (json['hr'] as num).toInt(),
       blockerBit: const PlatformBooleanConverter().fromJson(json['blockerBit']),
-      skinContactStatus: const PlatformBooleanConverter().fromJson(json['skinContactStatus']),
-      skinContactSupported: const PlatformBooleanConverter().fromJson(json['skinContactSupported']),
+      skinContactStatus:
+          const PlatformBooleanConverter().fromJson(json['skinContactStatus']),
+      skinContactSupported: const PlatformBooleanConverter()
+          .fromJson(json['skinContactSupported']),
     );
   }
 
   /// To json
   Map<String, dynamic> toJson() => {
-    'timeStamp': const PolarSampleTimestampConverter().toJson(timeStamp),
-    'ppi': ppi,
-    'errorEstimate': errorEstimate,
-    'hr': hr,
-    'blockerBit': const PlatformBooleanConverter().toJson(blockerBit),
-    'skinContactStatus': const PlatformBooleanConverter().toJson(skinContactStatus),
-    'skinContactSupported': const PlatformBooleanConverter().toJson(skinContactSupported),
-  };
+        'timeStamp': const PolarSampleTimestampConverter().toJson(timeStamp),
+        'ppi': ppi,
+        'errorEstimate': errorEstimate,
+        'hr': hr,
+        'blockerBit': const PlatformBooleanConverter().toJson(blockerBit),
+        'skinContactStatus':
+            const PlatformBooleanConverter().toJson(skinContactStatus),
+        'skinContactSupported':
+            const PlatformBooleanConverter().toJson(skinContactSupported),
+      };
 }
 
 /// Polar ppi data

@@ -1,9 +1,6 @@
-<<<<<<< HEAD
 // ignore_for_file: require_trailing_commas
 
 import 'dart:async';
-=======
->>>>>>> upstream/master
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
@@ -49,27 +46,7 @@ void main() {
   testStreaming(identifier, features: PolarDataType.values.toSet());
   testRecording(identifier, wait: false);
   testSdkMode(identifier);
-<<<<<<< HEAD
-  testMisc(identifier, isVerity: true);
-  testAvailableOfflineRecordingDataTypes(identifier);
-  testOfflineRecording(identifier);
-  testSleepData(identifier);
-}
-
-Future<void> invoke(String method, [dynamic arguments]) {
-  return TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .handlePlatformMessage(
-    channel.name,
-    channel.codec.encodeMethodCall(MethodCall(method, arguments)),
-    null,
-  );
-}
-
-void executeLater<T>(FutureOr<T> Function() computation) {
-  Future.delayed(Duration.zero, computation);
-=======
   testMisc(identifier, supportsLedConfig: true);
->>>>>>> upstream/master
 }
 
 final exercises = <PolarExerciseEntry>[];
@@ -321,11 +298,7 @@ class StreamingHandler extends MockStreamHandler {
         data = PolarPpiData(
           samples: [
             PolarPpiSample(
-<<<<<<< HEAD
               timeStamp: DateTime.now(),
-=======
-              timeStamp: 0,
->>>>>>> upstream/master
               ppi: 0,
               errorEstimate: 0,
               hr: 0,

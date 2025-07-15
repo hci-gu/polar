@@ -7,11 +7,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:polar/polar.dart';
-<<<<<<< HEAD
 import 'package:polar/src/model/convert.dart';
-=======
 import 'package:polar/src/model/polar_event_wrapper.dart';
->>>>>>> upstream/master
 
 /// Flutter implementation of the [PolarBleSdk]
 class Polar {
@@ -131,29 +128,8 @@ class Polar {
     if (requestPermissions) {
       await this.requestPermissions();
     }
-<<<<<<< HEAD
-    try {
-      unawaited(_channel.invokeMethod('connectToDevice', identifier));
-    } on PlatformException catch (e) {
-      switch (e.code) {
-        case 'NO_SUCH_FILE_OR_DIRECTORY':
-          throw PolarFileNotFoundException('The offline record file was not found: ${e.message}', e);
-        case 'device_disconnected':
-          throw PolarDeviceDisconnectedException('Device $identifier is not connected', e);
-        case 'not_supported':
-          throw PolarOperationNotSupportedException('Operation not supported by this device: ${e.message}', e);
-        case 'timeout':
-          throw PolarTimeoutException('Operation timed out: ${e.message}', e);
-        default:
-          throw PolarBluetoothOperationException('Failed to start offline recording: ${e.message}', e);
-      }
-    } catch (e) {
-      throw PolarDataException('Error starting offline recording: $e');
-    }
-=======
 
     unawaited(_methodChannel.invokeMethod('connectToDevice', identifier));
->>>>>>> upstream/master
   }
 
   /// Request the necessary permissions on Android
@@ -182,28 +158,7 @@ class Polar {
   /// - Parameter identifier: Polar device id
   /// - Throws: InvalidArgument if identifier is invalid polar device id or invalid uuid
   Future<void> disconnectFromDevice(String identifier) {
-<<<<<<< HEAD
-    try {
-      return _channel.invokeMethod('disconnectFromDevice', identifier);
-    } on PlatformException catch (e) {
-      switch (e.code) {
-        case 'NO_SUCH_FILE_OR_DIRECTORY':
-          throw PolarFileNotFoundException('The offline record file was not found: ${e.message}', e);
-        case 'device_disconnected':
-          throw PolarDeviceDisconnectedException('Device $identifier is not connected', e);
-        case 'not_supported':
-          throw PolarOperationNotSupportedException('Operation not supported by this device: ${e.message}', e);
-        case 'timeout':
-          throw PolarTimeoutException('Operation timed out: ${e.message}', e);
-        default:
-          throw PolarBluetoothOperationException('Failed to start offline recording: ${e.message}', e);
-      }
-    } catch (e) {
-      throw PolarDataException('Error starting offline recording: $e');
-    }
-=======
     return _methodChannel.invokeMethod('disconnectFromDevice', identifier);
->>>>>>> upstream/master
   }
 
   ///  Get the data types available in this device for online streaming
@@ -648,7 +603,7 @@ class Polar {
   Future<Set<PolarDataType>> getAvailableOfflineRecordingDataTypes(
     String identifier,
   ) async {
-    final response = await _channel.invokeMethod(
+    final response = await _methodChannel.invokeMethod(
       'getAvailableOfflineRecordingDataTypes',
       identifier,
     );
@@ -669,7 +624,7 @@ class Polar {
     String identifier,
     PolarDataType feature,
   ) async {
-    final response = await _channel.invokeMethod<String>(
+    final response = await _methodChannel.invokeMethod<String>(
       'requestOfflineRecordingSettings',
       [identifier, feature.toJson()],
     );
@@ -695,7 +650,7 @@ class Polar {
     PolarSensorSetting? settings,
   }) async {
     try {
-      await _channel.invokeMethod(
+      await _methodChannel.invokeMethod(
         'startOfflineRecording',
         [
           identifier,
@@ -706,15 +661,27 @@ class Polar {
     } on PlatformException catch (e) {
       switch (e.code) {
         case 'NO_SUCH_FILE_OR_DIRECTORY':
-          throw PolarFileNotFoundException('The offline record file was not found: ${e.message}', e);
+          throw PolarFileNotFoundException(
+            'The offline record file was not found: ${e.message}',
+            e,
+          );
         case 'device_disconnected':
-          throw PolarDeviceDisconnectedException('Device $identifier is not connected', e);
+          throw PolarDeviceDisconnectedException(
+            'Device $identifier is not connected',
+            e,
+          );
         case 'not_supported':
-          throw PolarOperationNotSupportedException('Operation not supported by this device: ${e.message}', e);
+          throw PolarOperationNotSupportedException(
+            'Operation not supported by this device: ${e.message}',
+            e,
+          );
         case 'timeout':
           throw PolarTimeoutException('Operation timed out: ${e.message}', e);
         default:
-          throw PolarBluetoothOperationException('Failed to start offline recording: ${e.message}', e);
+          throw PolarBluetoothOperationException(
+            'Failed to start offline recording: ${e.message}',
+            e,
+          );
       }
     } catch (e) {
       throw PolarDataException('Error starting offline recording: $e');
@@ -734,22 +701,34 @@ class Polar {
     PolarDataType feature,
   ) async {
     try {
-      await _channel.invokeMethod(
+      await _methodChannel.invokeMethod(
         'stopOfflineRecording',
         [identifier, feature.toJson()],
       );
     } on PlatformException catch (e) {
       switch (e.code) {
         case 'NO_SUCH_FILE_OR_DIRECTORY':
-          throw PolarFileNotFoundException('The offline record file was not found: ${e.message}', e);
+          throw PolarFileNotFoundException(
+            'The offline record file was not found: ${e.message}',
+            e,
+          );
         case 'device_disconnected':
-          throw PolarDeviceDisconnectedException('Device disconnected while stopping recording: ${e.message}', e);
+          throw PolarDeviceDisconnectedException(
+            'Device disconnected while stopping recording: ${e.message}',
+            e,
+          );
         case 'not_supported':
-          throw PolarOperationNotSupportedException('Operation not supported by this device: ${e.message}', e);
+          throw PolarOperationNotSupportedException(
+            'Operation not supported by this device: ${e.message}',
+            e,
+          );
         case 'timeout':
           throw PolarTimeoutException('Operation timed out: ${e.message}', e);
         default:
-          throw PolarBluetoothOperationException('Failed to stop offline recording: ${e.message}', e);
+          throw PolarBluetoothOperationException(
+            'Failed to stop offline recording: ${e.message}',
+            e,
+          );
       }
     } catch (e) {
       throw PolarDataException('Error stopping offline recording: $e');
@@ -768,7 +747,7 @@ class Polar {
     String identifier,
   ) async {
     try {
-      final result = await _channel.invokeMethod<List<dynamic>>(
+      final result = await _methodChannel.invokeMethod<List<dynamic>>(
         'getOfflineRecordingStatus',
         [identifier],
       );
@@ -782,15 +761,27 @@ class Polar {
     } on PlatformException catch (e) {
       switch (e.code) {
         case 'NO_SUCH_FILE_OR_DIRECTORY':
-          throw PolarFileNotFoundException('The offline record file was not found: ${e.message}', e);
+          throw PolarFileNotFoundException(
+            'The offline record file was not found: ${e.message}',
+            e,
+          );
         case 'device_disconnected':
-          throw PolarDeviceDisconnectedException('Device disconnected while removing record: ${e.message}', e);
+          throw PolarDeviceDisconnectedException(
+            'Device disconnected while removing record: ${e.message}',
+            e,
+          );
         case 'not_supported':
-          throw PolarOperationNotSupportedException('Operation not supported by this device: ${e.message}', e);
+          throw PolarOperationNotSupportedException(
+            'Operation not supported by this device: ${e.message}',
+            e,
+          );
         case 'timeout':
           throw PolarTimeoutException('Operation timed out: ${e.message}', e);
         default:
-          throw PolarBluetoothOperationException('Failed to get offline recording status: ${e.message}', e);
+          throw PolarBluetoothOperationException(
+            'Failed to get offline recording status: ${e.message}',
+            e,
+          );
       }
     } catch (e) {
       throw PolarDataException('Error getting offline recording status: $e');
@@ -808,19 +799,22 @@ class Polar {
     String identifier,
   ) async {
     try {
-      final result = await _channel.invokeListMethod(
+      final result = await _methodChannel.invokeListMethod(
         'listOfflineRecordings',
         identifier,
-    );
+      );
 
-    if (result == null) return [];
+      if (result == null) return [];
 
-    return result
-        .cast<String>()
-        .map((e) => PolarOfflineRecordingEntry.fromJson(jsonDecode(e)))
-        .toList();
+      return result
+          .cast<String>()
+          .map((e) => PolarOfflineRecordingEntry.fromJson(jsonDecode(e)))
+          .toList();
     } on PlatformException catch (e) {
-      throw PolarBluetoothOperationException('Failed to list offline recordings: ${e.message}', e);
+      throw PolarBluetoothOperationException(
+        'Failed to list offline recordings: ${e.message}',
+        e,
+      );
     } catch (e) {
       throw PolarDataException('Error listing offline recordings: $e');
     }
@@ -838,7 +832,7 @@ class Polar {
     String identifier,
     PolarOfflineRecordingEntry entry,
   ) async {
-    final result = await _channel.invokeMethod<String>(
+    final result = await _methodChannel.invokeMethod<String>(
       'getOfflineRecord',
       [identifier, jsonEncode(entry.toJson())],
     );
@@ -861,7 +855,7 @@ class Polar {
     PolarOfflineRecordingEntry entry,
   ) async {
     try {
-      final result = await _channel.invokeMethod<String>(
+      final result = await _methodChannel.invokeMethod<String>(
         'getOfflineRecord',
         [identifier, jsonEncode(entry.toJson())],
       );
@@ -869,7 +863,10 @@ class Polar {
       final data = jsonDecode(result);
       return PpiOfflineRecording.fromJson(data);
     } on PlatformException catch (e) {
-      throw PolarBluetoothOperationException('Failed to get offline ppi record: ${e.message}', e);
+      throw PolarBluetoothOperationException(
+        'Failed to get offline ppi record: ${e.message}',
+        e,
+      );
     } catch (e) {
       throw PolarDataException('Error getting offline ppi record: $e');
     }
@@ -888,7 +885,7 @@ class Polar {
     PolarOfflineRecordingEntry entry,
   ) async {
     try {
-      final result = await _channel.invokeMethod<String>(
+      final result = await _methodChannel.invokeMethod<String>(
         'getOfflineRecord',
         [identifier, jsonEncode(entry.toJson())],
       );
@@ -896,11 +893,14 @@ class Polar {
       final data = jsonDecode(result);
       return HrOfflineRecording.fromJson(data);
     } on PlatformException catch (e) {
-      throw PolarBluetoothOperationException('Failed to get offline hr record: ${e.message}', e);
+      throw PolarBluetoothOperationException(
+        'Failed to get offline hr record: ${e.message}',
+        e,
+      );
     } catch (e) {
       throw PolarDataException('Error getting offline hr record: $e');
     }
-  } 
+  }
 
   /// Fetches a specific offline recording from a Polar device.
   ///
@@ -915,15 +915,18 @@ class Polar {
     PolarOfflineRecordingEntry entry,
   ) async {
     try {
-      final result = await _channel.invokeMethod<String>(
+      final result = await _methodChannel.invokeMethod<String>(
         'getOfflineRecord',
         [identifier, jsonEncode(entry.toJson())],
-    );
-    if (result == null) return null;
-    final data = jsonDecode(result);
-    return PpgOfflineRecording.fromJson(data);
+      );
+      if (result == null) return null;
+      final data = jsonDecode(result);
+      return PpgOfflineRecording.fromJson(data);
     } on PlatformException catch (e) {
-      throw PolarBluetoothOperationException('Failed to get offline ppg record: ${e.message}', e);
+      throw PolarBluetoothOperationException(
+        'Failed to get offline ppg record: ${e.message}',
+        e,
+      );
     } catch (e) {
       throw PolarDataException('Error getting offline ppg record: $e');
     }
@@ -942,22 +945,34 @@ class Polar {
     PolarOfflineRecordingEntry entry,
   ) async {
     try {
-      await _channel.invokeMethod(
+      await _methodChannel.invokeMethod(
         'removeOfflineRecord',
         [identifier, jsonEncode(entry.toJson())],
       );
     } on PlatformException catch (e) {
       switch (e.code) {
         case 'NO_SUCH_FILE_OR_DIRECTORY':
-          throw PolarFileNotFoundException('The offline record file was not found: ${e.message}', e);
+          throw PolarFileNotFoundException(
+            'The offline record file was not found: ${e.message}',
+            e,
+          );
         case 'device_disconnected':
-          throw PolarDeviceDisconnectedException('Device disconnected while removing record: ${e.message}', e);
+          throw PolarDeviceDisconnectedException(
+            'Device disconnected while removing record: ${e.message}',
+            e,
+          );
         case 'not_supported':
-          throw PolarOperationNotSupportedException('Operation not supported by this device: ${e.message}', e);
+          throw PolarOperationNotSupportedException(
+            'Operation not supported by this device: ${e.message}',
+            e,
+          );
         case 'timeout':
           throw PolarTimeoutException('Operation timed out: ${e.message}', e);
         default:
-          throw PolarBluetoothOperationException('Failed to remove offline record: ${e.message}', e);
+          throw PolarBluetoothOperationException(
+            'Failed to remove offline record: ${e.message}',
+            e,
+          );
       }
     } catch (e) {
       throw PolarDataException('Error removing offline record: $e');
@@ -973,13 +988,16 @@ class Polar {
   ///   - onError: Possible errors are returned as exceptions.
   Future<List<int>> getDiskSpace(String identifier) async {
     try {
-      final result = await _channel.invokeMethod<List<dynamic>>(
+      final result = await _methodChannel.invokeMethod<List<dynamic>>(
         'getDiskSpace',
         identifier,
       );
       return result?.map((e) => e as int).toList() ?? [];
     } on PlatformException catch (e) {
-      throw PolarBluetoothOperationException('Failed to get disk space: ${e.message}', e);
+      throw PolarBluetoothOperationException(
+        'Failed to get disk space: ${e.message}',
+        e,
+      );
     } catch (e) {
       throw PolarDataException('Error getting disk space: $e');
     }
@@ -994,7 +1012,8 @@ class Polar {
   ///   - onError: Possible errors are returned as exceptions.
   Future<DateTime?> getLocalTime(String identifier) async {
     try {
-      final result = await _channel.invokeMethod<String>('getLocalTime', identifier);
+      final result =
+          await _methodChannel.invokeMethod<String>('getLocalTime', identifier);
 
       // If the result is null, return null
       if (result == null) return null;
@@ -1004,11 +1023,14 @@ class Polar {
 
       return time;
     } on PlatformException catch (e) {
-      throw PolarBluetoothOperationException('Failed to get local time: ${e.message}', e);
+      throw PolarBluetoothOperationException(
+        'Failed to get local time: ${e.message}',
+        e,
+      );
     } catch (e) {
       throw PolarDataException('Error getting local time: $e');
     }
-  } 
+  }
 
   /// Sets the local time on a Polar device.
   ///
@@ -1024,9 +1046,13 @@ class Polar {
       final timestamp = time.millisecondsSinceEpoch / 1000;
 
       // Call the native method to set the local time on the Polar device
-      await _channel.invokeMethod('setLocalTime', [identifier, timestamp]);
+      await _methodChannel
+          .invokeMethod('setLocalTime', [identifier, timestamp]);
     } on PlatformException catch (e) {
-      throw PolarBluetoothOperationException('Failed to set local time: ${e.message}', e);
+      throw PolarBluetoothOperationException(
+        'Failed to set local time: ${e.message}',
+        e,
+      );
     } catch (e) {
       throw PolarDataException('Error setting local time: $e');
     }
@@ -1045,12 +1071,15 @@ class Polar {
     PolarFirstTimeUseConfig config,
   ) async {
     try {
-      await _channel.invokeMethod('doFirstTimeUse', {
+      await _methodChannel.invokeMethod('doFirstTimeUse', {
         'identifier': identifier,
         'config': config.toMap(),
       });
     } on PlatformException catch (e) {
-      throw PolarBluetoothOperationException('Failed to do first time use: ${e.message}', e);
+      throw PolarBluetoothOperationException(
+        'Failed to do first time use: ${e.message}',
+        e,
+      );
     } catch (e) {
       throw PolarDataException('Error doing first time use: $e');
     }
@@ -1065,19 +1094,23 @@ class Polar {
   ///   - onError: Possible errors are returned as exceptions.
   Future<bool> isFtuDone(String identifier) async {
     try {
-      final result = await _channel.invokeMethod<bool>('isFtuDone', identifier);
+      final result =
+          await _methodChannel.invokeMethod<bool>('isFtuDone', identifier);
 
-    // If the result is null, default to false for safety
-    return result ?? false;
+      // If the result is null, default to false for safety
+      return result ?? false;
     } on PlatformException catch (e) {
-      throw PolarBluetoothOperationException('Failed to check FTU status: ${e.message}', e);
+      throw PolarBluetoothOperationException(
+        'Failed to check FTU status: ${e.message}',
+        e,
+      );
     } catch (e) {
       throw PolarDataException('Error checking FTU status: $e');
     }
   }
 
   /// Get sleep data for a specific date range
-  /// 
+  ///
   /// Returns an empty list if no sleep data is available for the specified date range
   Future<List<PolarSleepData>> getSleep(
     String identifier,
@@ -1096,14 +1129,18 @@ class Polar {
 
       // FIXED: Don't convert to UTC, preserve local date
       // Extract just the date part in YYYY-MM-DD format using local time
-      final fromDateStr = '${fromDate.year}-${fromDate.month.toString().padLeft(2, '0')}-${fromDate.day.toString().padLeft(2, '0')}';
-      final toDateStr = '${toDate.year}-${toDate.month.toString().padLeft(2, '0')}-${toDate.day.toString().padLeft(2, '0')}';
-      
+      final fromDateStr =
+          '${fromDate.year}-${fromDate.month.toString().padLeft(2, '0')}-${fromDate.day.toString().padLeft(2, '0')}';
+      final toDateStr =
+          '${toDate.year}-${toDate.month.toString().padLeft(2, '0')}-${toDate.day.toString().padLeft(2, '0')}';
+
       // Log for debugging
       debugPrint('Polar getSleep: local dates from=$fromDate, to=$toDate');
-      debugPrint('Polar getSleep: sending fromDateStr=$fromDateStr, toDateStr=$toDateStr');
+      debugPrint(
+        'Polar getSleep: sending fromDateStr=$fromDateStr, toDateStr=$toDateStr',
+      );
 
-      final response = await _channel.invokeMethod(
+      final response = await _methodChannel.invokeMethod(
         'getSleep',
         [
           identifier,
@@ -1117,25 +1154,41 @@ class Polar {
       if (response is String) {
         final List<dynamic> parsed = jsonDecode(response);
         return parsed
-            .map((json) => PolarSleepData.fromJson(json as Map<String, dynamic>))
+            .map(
+              (json) => PolarSleepData.fromJson(json as Map<String, dynamic>),
+            )
             .toList();
       }
 
       if (response is List) {
         return response
-            .map((data) => PolarSleepData.fromJson(Map<String, dynamic>.from(data)))
+            .map(
+              (data) =>
+                  PolarSleepData.fromJson(Map<String, dynamic>.from(data)),
+            )
             .toList();
       }
 
-      throw PolarDataException('Unexpected response type: ${response.runtimeType}');
+      throw PolarDataException(
+        'Unexpected response type: ${response.runtimeType}',
+      );
     } on PlatformException catch (e) {
       switch (e.code) {
         case 'device_disconnected':
-          throw PolarDeviceDisconnectedException('Device $identifier is not connected', e);
+          throw PolarDeviceDisconnectedException(
+            'Device $identifier is not connected',
+            e,
+          );
         case 'not_supported':
-          throw PolarNotSupportedException('Sleep tracking not supported on device $identifier', e);
+          throw PolarNotSupportedException(
+            'Sleep tracking not supported on device $identifier',
+            e,
+          );
         default:
-          throw PolarBluetoothOperationException('Failed to get sleep data: ${e.message}', e);
+          throw PolarBluetoothOperationException(
+            'Failed to get sleep data: ${e.message}',
+            e,
+          );
       }
     } catch (e) {
       throw PolarDataException('Error processing sleep data: $e');
@@ -1150,17 +1203,29 @@ class Polar {
   ///   - onError: Possible errors thrown as exceptions
   Future<void> stopSleepRecording(String identifier) async {
     try {
-      await _channel.invokeMethod('stopSleepRecording', identifier);
+      await _methodChannel.invokeMethod('stopSleepRecording', identifier);
     } on PlatformException catch (e) {
       switch (e.code) {
         case 'device_disconnected':
-          throw PolarDeviceDisconnectedException('Device $identifier is not connected', e);
+          throw PolarDeviceDisconnectedException(
+            'Device $identifier is not connected',
+            e,
+          );
         case 'not_supported':
-          throw PolarOperationNotSupportedException('Operation not supported by this device: ${e.message}', e);
+          throw PolarOperationNotSupportedException(
+            'Operation not supported by this device: ${e.message}',
+            e,
+          );
         case 'timeout':
-          throw PolarTimeoutException('Operation timed out: ${e.message}', e);
+          throw PolarTimeoutException(
+            'Operation timed out: ${e.message}',
+            e,
+          );
         default:
-          throw PolarBluetoothOperationException('Failed to stop sleep recording: ${e.message}', e);
+          throw PolarBluetoothOperationException(
+            'Failed to stop sleep recording: ${e.message}',
+            e,
+          );
       }
     } catch (e) {
       throw PolarDataException('Error stopping sleep recording: $e');
@@ -1175,20 +1240,36 @@ class Polar {
   ///   - onError: Possible errors thrown as exceptions
   Future<bool> getSleepRecordingState(String identifier) async {
     try {
-      debugPrint('Polar getSleepRecordingState: checking state for $identifier');
-      final result = await _channel.invokeMethod<bool>('getSleepRecordingState', identifier);
+      debugPrint(
+        'Polar getSleepRecordingState: checking state for $identifier',
+      );
+      final result = await _methodChannel.invokeMethod<bool>(
+        'getSleepRecordingState',
+        identifier,
+      );
       debugPrint('Polar getSleepRecordingState: result is $result');
       // If the result is null, default to false for safety
       return result ?? false;
     } on PlatformException catch (e) {
-      debugPrint('Polar getSleepRecordingState: error - ${e.code}: ${e.message}');
+      debugPrint(
+        'Polar getSleepRecordingState: error - ${e.code}: ${e.message}',
+      );
       switch (e.code) {
         case 'device_disconnected':
-          throw PolarDeviceDisconnectedException('Device $identifier is not connected', e);
+          throw PolarDeviceDisconnectedException(
+            'Device $identifier is not connected',
+            e,
+          );
         case 'not_supported':
-          throw PolarNotSupportedException('Sleep state checking not supported on device $identifier', e);
+          throw PolarNotSupportedException(
+            'Sleep state checking not supported on device $identifier',
+            e,
+          );
         default:
-          throw PolarBluetoothOperationException('Failed to get sleep recording state: ${e.message}', e);
+          throw PolarBluetoothOperationException(
+            'Failed to get sleep recording state: ${e.message}',
+            e,
+          );
       }
     } catch (e) {
       debugPrint('Polar getSleepRecordingState: unexpected error - $e');
@@ -1203,18 +1284,18 @@ class Polar {
   /// - Returns: Stream<bool> of values indicating if sleep recording is ongoing
   ///   - onError: Possible errors thrown as exceptions
   Stream<bool> observeSleepRecordingState(String identifier) {
-    debugPrint('Polar observeSleepRecordingState: starting observation for $identifier');
+    debugPrint(
+      'Polar observeSleepRecordingState: starting observation for $identifier',
+    );
     final channelName = 'polar/sleep_state/$identifier';
-    
+
     // Create a method to setup the event channel
     return _setupObservationChannel(channelName, identifier);
   }
-  
- 
 
   /// Deletes device day (YYYYMMDD) folders from the given date range from a device.
   /// The date range is inclusive. Deletes the day folder (plus all sub-folders with any contents).
-  /// 
+  ///
   /// Note: If some date folders don't exist, the operation will continue and delete other existing folders.
   /// The operation is considered successful as long as the device is connected and the operation is supported.
   ///
@@ -1240,14 +1321,20 @@ class Polar {
       }
 
       // Extract just the date part in YYYY-MM-DD format using local time
-      final fromDateStr = '${fromDate.year}-${fromDate.month.toString().padLeft(2, '0')}-${fromDate.day.toString().padLeft(2, '0')}';
-      final toDateStr = '${toDate.year}-${toDate.month.toString().padLeft(2, '0')}-${toDate.day.toString().padLeft(2, '0')}';
-      
-      // Log for debugging
-      debugPrint('Polar deleteDeviceDateFolders: for device $identifier from=$fromDate, to=$toDate');
-      debugPrint('Polar deleteDeviceDateFolders: sending fromDateStr=$fromDateStr, toDateStr=$toDateStr');
+      final fromDateStr =
+          '${fromDate.year}-${fromDate.month.toString().padLeft(2, '0')}-${fromDate.day.toString().padLeft(2, '0')}';
+      final toDateStr =
+          '${toDate.year}-${toDate.month.toString().padLeft(2, '0')}-${toDate.day.toString().padLeft(2, '0')}';
 
-      await _channel.invokeMethod(
+      // Log for debugging
+      debugPrint(
+        'Polar deleteDeviceDateFolders: for device $identifier from=$fromDate, to=$toDate',
+      );
+      debugPrint(
+        'Polar deleteDeviceDateFolders: sending fromDateStr=$fromDateStr, toDateStr=$toDateStr',
+      );
+
+      await _methodChannel.invokeMethod(
         'deleteDeviceDateFolders',
         [
           identifier,
@@ -1258,17 +1345,28 @@ class Polar {
     } on PlatformException catch (e) {
       switch (e.code) {
         case 'device_disconnected':
-          throw PolarDeviceDisconnectedException('Device $identifier is not connected', e);
+          throw PolarDeviceDisconnectedException(
+            'Device $identifier is not connected',
+            e,
+          );
         case 'not_supported':
-          throw PolarOperationNotSupportedException('Operation not supported by this device: ${e.message}', e);
+          throw PolarOperationNotSupportedException(
+            'Operation not supported by this device: ${e.message}',
+            e,
+          );
         case 'timeout':
           throw PolarTimeoutException('Operation timed out: ${e.message}', e);
         case 'NO_SUCH_FILE_OR_DIRECTORY':
           // For cleanup operations, missing folders are not an error - the goal is achieved
-          debugPrint('Polar deleteDeviceDateFolders: some or all date folders were already missing, which is fine for cleanup');
+          debugPrint(
+            'Polar deleteDeviceDateFolders: some or all date folders were already missing, which is fine for cleanup',
+          );
           return; // Treat as successful completion
         default:
-          throw PolarBluetoothOperationException('Failed to delete device date folders: ${e.message}', e);
+          throw PolarBluetoothOperationException(
+            'Failed to delete device date folders: ${e.message}',
+            e,
+          );
       }
     } catch (e) {
       throw PolarDataException('Error deleting device date folders: $e');
@@ -1295,13 +1393,18 @@ class Polar {
       }
 
       // Extract just the date part in YYYY-MM-DD format using local time
-      final untilDateStr = '${until.year}-${until.month.toString().padLeft(2, '0')}-${until.day.toString().padLeft(2, '0')}';
-      
-      // Log for debugging
-      debugPrint('Polar deleteStoredDeviceData: for device $identifier type=$dataType until=$until');
-      debugPrint('Polar deleteStoredDeviceData: sending untilDateStr=$untilDateStr');
+      final untilDateStr =
+          '${until.year}-${until.month.toString().padLeft(2, '0')}-${until.day.toString().padLeft(2, '0')}';
 
-      await _channel.invokeMethod(
+      // Log for debugging
+      debugPrint(
+        'Polar deleteStoredDeviceData: for device $identifier type=$dataType until=$until',
+      );
+      debugPrint(
+        'Polar deleteStoredDeviceData: sending untilDateStr=$untilDateStr',
+      );
+
+      await _methodChannel.invokeMethod(
         'deleteStoredDeviceData',
         [
           identifier,
@@ -1312,17 +1415,28 @@ class Polar {
     } on PlatformException catch (e) {
       switch (e.code) {
         case 'device_disconnected':
-          throw PolarDeviceDisconnectedException('Device $identifier is not connected', e);
+          throw PolarDeviceDisconnectedException(
+            'Device $identifier is not connected',
+            e,
+          );
         case 'not_supported':
-          throw PolarOperationNotSupportedException('Operation not supported by this device: ${e.message}', e);
+          throw PolarOperationNotSupportedException(
+            'Operation not supported by this device: ${e.message}',
+            e,
+          );
         case 'timeout':
           throw PolarTimeoutException('Operation timed out: ${e.message}', e);
         case 'NO_SUCH_FILE_OR_DIRECTORY':
           // For cleanup operations, missing data is not an error - the goal is achieved
-          debugPrint('Polar deleteStoredDeviceData: data of type $dataType was already missing, which is fine for cleanup');
+          debugPrint(
+            'Polar deleteStoredDeviceData: data of type $dataType was already missing, which is fine for cleanup',
+          );
           return; // Treat as successful completion
         default:
-          throw PolarBluetoothOperationException('Failed to delete stored device data: ${e.message}', e);
+          throw PolarBluetoothOperationException(
+            'Failed to delete stored device data: ${e.message}',
+            e,
+          );
       }
     } catch (e) {
       throw PolarDataException('Error deleting stored device data: $e');
@@ -1330,29 +1444,44 @@ class Polar {
   }
 
   // Helper method to set up an observation channel
-  Stream<bool> _setupObservationChannel(String channelName, String identifier) async* {
+  Stream<bool> _setupObservationChannel(
+    String channelName,
+    String identifier,
+  ) async* {
     try {
       // First check if the feature is available
-      await _channel.invokeMethod('setupSleepStateObservation', [channelName, identifier]);
-      
+      await _methodChannel.invokeMethod(
+        'setupSleepStateObservation',
+        [channelName, identifier],
+      );
+
       yield* EventChannel(channelName)
           .receiveBroadcastStream()
           .map((dynamic event) => event as bool)
           .handleError((error) {
-            debugPrint('Polar sleep state observation error: $error');
-            // Transform platform errors to our custom exceptions
-            if (error is PlatformException) {
-              switch (error.code) {
-                case 'device_disconnected':
-                  throw PolarDeviceDisconnectedException('Device $identifier disconnected', error);
-                case 'not_supported':
-                  throw PolarNotSupportedException('Sleep state observation not supported', error);
-                default:
-                  throw PolarBluetoothOperationException('Sleep state observation error: ${error.message}', error);
-              }
-            }
-            throw PolarDataException('Sleep state observation error: $error');
-          });
+        debugPrint('Polar sleep state observation error: $error');
+        // Transform platform errors to our custom exceptions
+        if (error is PlatformException) {
+          switch (error.code) {
+            case 'device_disconnected':
+              throw PolarDeviceDisconnectedException(
+                'Device $identifier disconnected',
+                error,
+              );
+            case 'not_supported':
+              throw PolarNotSupportedException(
+                'Sleep state observation not supported',
+                error,
+              );
+            default:
+              throw PolarBluetoothOperationException(
+                'Sleep state observation error: ${error.message}',
+                error,
+              );
+          }
+        }
+        throw PolarDataException('Sleep state observation error: $error');
+      });
     } catch (e) {
       debugPrint('Polar _setupObservationChannel error: $e');
       throw PolarDataException('Failed to setup sleep state observation: $e');

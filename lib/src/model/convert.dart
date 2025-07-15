@@ -82,12 +82,11 @@ class UnixTimeConverter extends JsonConverter<DateTime, int> {
   const UnixTimeConverter();
 
   @override
-  DateTime fromJson(int json) => 
+  DateTime fromJson(int json) =>
       DateTime.fromMillisecondsSinceEpoch(json, isUtc: true);
 
   @override
-  int toJson(DateTime object) => 
-      object.toUtc().millisecondsSinceEpoch;
+  int toJson(DateTime object) => object.toUtc().millisecondsSinceEpoch;
 }
 
 /// Converter for [PolarSettingType]
@@ -129,11 +128,14 @@ class PolarSampleTimestampConverter extends JsonConverter<DateTime, int> {
   @override
   DateTime fromJson(int json) {
     final millis = json ~/ 1000;
-    return DateTime.fromMicrosecondsSinceEpoch(_polarEpoch + millis, isUtc: true);
+    return DateTime.fromMicrosecondsSinceEpoch(
+      _polarEpoch + millis,
+      isUtc: true,
+    );
   }
 
   @override
-  int toJson(DateTime object) => 
+  int toJson(DateTime object) =>
       (object.microsecondsSinceEpoch - _polarEpoch) * 1000;
 }
 
