@@ -57,7 +57,6 @@ final offlineRecordings = <PolarOfflineRecordingEntry>[];
 var diskSpace = [14416896, 14369729];
 
 Future<dynamic> handleMethodCall(MethodCall methodCall) async {
-  
   switch (methodCall.method) {
     case 'connectToDevice':
       return null;
@@ -70,9 +69,9 @@ Future<dynamic> handleMethodCall(MethodCall methodCall) async {
     case 'createStreamingChannel':
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockStreamHandler(
-              EventChannel(methodCall.arguments[0] as String),
-              StreamingHandler(PolarDataType.fromJson(methodCall.arguments[2])),
-          );
+        EventChannel(methodCall.arguments[0] as String),
+        StreamingHandler(PolarDataType.fromJson(methodCall.arguments[2])),
+      );
       return null;
     case 'startRecording':
       recording = true;
@@ -87,7 +86,9 @@ Future<dynamic> handleMethodCall(MethodCall methodCall) async {
     case 'requestRecordingStatus':
       return [recording, exerciseId];
     case 'getOfflineRecordingStatus':
-      return [PolarDataType.acc.toJson()];  // Return only ACC as the active recording
+      return [
+        PolarDataType.acc.toJson()
+      ]; // Return only ACC as the active recording
     case 'listExercises':
       return exercises.map(jsonEncode).toList();
     case 'fetchExercise':
@@ -128,7 +129,9 @@ Future<dynamic> handleMethodCall(MethodCall methodCall) async {
       diskSpace = [14416896, 14362624];
       return null;
     case 'listOfflineRecordings':
-      return offlineRecordings.map((entry) => jsonEncode(entry.toJson())).toList();
+      return offlineRecordings
+          .map((entry) => jsonEncode(entry.toJson()))
+          .toList();
     case 'getOfflineAccRecord':
       return offlineRecordings.isNotEmpty
           ? AccOfflineRecording(
@@ -153,33 +156,27 @@ Future<dynamic> handleMethodCall(MethodCall methodCall) async {
     case 'getOfflineRecord':
       final arguments = methodCall.arguments as List<dynamic>;
       final entryJsonString = arguments[1] as String;
-      final entry = PolarOfflineRecordingEntry.fromJson(jsonDecode(entryJsonString));
-      
+      final entry =
+          PolarOfflineRecordingEntry.fromJson(jsonDecode(entryJsonString));
+
       if (entry.type == PolarDataType.acc) {
         final now = DateTime.now();
         final accData = {
           'data': {
             'type': 'acc',
             'samples': [
-              {
-                'timeStamp': now.millisecondsSinceEpoch,
-                'x': 1,
-                'y': 1,
-                'z': 1
-              },
+              {'timeStamp': now.millisecondsSinceEpoch, 'x': 1, 'y': 1, 'z': 1},
             ]
           },
           'startTime': {
             'year': now.year,
-            'month': now.month - 1,  // Month is 0-based in the converter
+            'month': now.month - 1, // Month is 0-based in the converter
             'dayOfMonth': now.day,
             'hourOfDay': now.hour,
             'minute': now.minute,
             'second': now.second,
           },
-          'settings': {
-            'settings': {}
-          }
+          'settings': {'settings': {}}
         };
         return jsonEncode(accData);
       } else if (entry.type == PolarDataType.ppi) {
@@ -189,17 +186,18 @@ Future<dynamic> handleMethodCall(MethodCall methodCall) async {
     case 'getSleep':
       final arguments = methodCall.arguments as List<dynamic>;
       final fromDateStr = arguments[1] as String;
-      
+
       // Return empty list for dates in 2022
       if (fromDateStr.startsWith('2022')) {
         return [];
       }
-      
+
       final now = DateTime.now();
-      
+
       return [
         {
-          'date': now.subtract(const Duration(days: 1))
+          'date': now
+              .subtract(const Duration(days: 1))
               .toIso8601String()
               .split('T')[0],
           'analysis': {
@@ -207,8 +205,10 @@ Future<dynamic> handleMethodCall(MethodCall methodCall) async {
             'continuousSleepDuration': 25200000,
             'sleepIntervals': [
               {
-                'startTime': now.subtract(const Duration(hours: 8)).toIso8601String(),
-                'endTime': now.subtract(const Duration(hours: 7)).toIso8601String(),
+                'startTime':
+                    now.subtract(const Duration(hours: 8)).toIso8601String(),
+                'endTime':
+                    now.subtract(const Duration(hours: 7)).toIso8601String(),
                 'sleepStage': 'DEEP_SLEEP'
               }
             ]
@@ -330,13 +330,8 @@ class StreamingHandler extends MockStreamHandler {
           samples: [
             PolarHrSample(
               hr: 0,
-<<<<<<< HEAD
-              correctedHr: 0,
-              ppgQuality: 0,
-=======
               ppgQuality: 0,
               correctedHr: 0,
->>>>>>> upstream/master
               rrsMs: [],
               rrAvailable: false,
               contactStatus: false,
